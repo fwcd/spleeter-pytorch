@@ -95,6 +95,9 @@ class Estimator(nn.Module):
                     window=self.win)
         return wav.detach()
 
+    def forward(self, wav):
+        return self.separate(wav)
+
     def separate(self, wav):
         """
         Separates stereo wav into different tracks corresponding to different instruments

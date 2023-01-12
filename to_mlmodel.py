@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import coremltools as ct
 import numpy as np
 import librosa
 import soundfile
@@ -18,6 +19,14 @@ if __name__ == '__main__':
 
     # normalize audio
     # wav_torch = wav / (wav.max() + 1e-8)
+
+    print('==> Tracing')
+    traced_model = torch.jit.trace(es, wav)
+    print('==> Inferring')
+    out = traced_model(wav)
+    print('==> Converting')
+    mlmodel = ct.convert(traced_model, convert_to='mlprogram', inputs=[ct.TensorType(shape=wav.shape)])
+    print(mlmodel)
 
     wavs = es.separate(wav)
     for i in range(len(wavs)):
