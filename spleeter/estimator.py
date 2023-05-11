@@ -2,12 +2,12 @@ import math
 
 import torch
 import torch.nn.functional as F
+
+from pathlib import Path
 from torch import nn
-# from torchaudio.functional import istft
 
 from .unet import UNet
 from .util import tf2pytorch
-
 
 def load_ckpt(model, ckpt):
     state_dict = model.state_dict()
@@ -42,7 +42,7 @@ def pad_and_partition(tensor, T):
 
 
 class Estimator(nn.Module):
-    def __init__(self, num_instrumments, checkpoint_path):
+    def __init__(self, num_instruments: int, checkpoint_path: Path):
         super(Estimator, self).__init__()
 
         # stft config
@@ -55,12 +55,12 @@ class Estimator(nn.Module):
             requires_grad=False
         )
 
-        ckpts = tf2pytorch(checkpoint_path, num_instrumments)
+        ckpts = tf2pytorch(checkpoint_path, num_instruments)
 
         # filter
         self.instruments = nn.ModuleList()
-        for i in range(num_instrumments):
-            print('Loading model for instrumment {}'.format(i))
+        for i in range(num_instruments):
+            print('Loading model for instrument {}'.format(i))
             net = UNet(2)
             ckpt = ckpts[i]
             net = load_ckpt(net, ckpt)

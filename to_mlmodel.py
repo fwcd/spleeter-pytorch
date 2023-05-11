@@ -6,15 +6,18 @@ import librosa
 import soundfile
 import torch
 
+from pathlib import Path
 from spleeter.estimator import Estimator
 
-if __name__ == '__main__':
+ROOT = Path(__file__).resolve().parent
+
+def main():
     sr = 44100
-    es = Estimator(2, './checkpoints/2stems/model')
+    es = Estimator(2, ROOT / 'checkpoints' / '2stems' / 'model')
     es.eval()
 
     # load wav audio
-    wav, _ = librosa.load('./audio_example.mp3', mono=False, res_type='kaiser_fast',sr=sr)
+    wav, _ = librosa.load(ROOT / 'audio_example.mp3', mono=False, res_type='kaiser_fast',sr=sr)
     wav = torch.Tensor(wav)
 
     # normalize audio
@@ -34,3 +37,6 @@ if __name__ == '__main__':
         print('Writing ',fname)
         soundfile.write(fname, wavs[i].cpu().detach().numpy().T, sr, "PCM_16")
         # write_wav(fname, np.asfortranarray(wavs[i].squeeze().numpy()), sr)
+
+if __name__ == '__main__':
+    main()

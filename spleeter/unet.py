@@ -1,6 +1,7 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+
+from torch import nn
 
 class CustomPad(nn.Module):
     def __init__(self, padding_setting=(1, 2, 1, 2)):

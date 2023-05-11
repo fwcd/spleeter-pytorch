@@ -1,10 +1,9 @@
 import numpy as np
 import tensorflow as tf
 
-from .unet import UNet
+from pathlib import Path
 
-
-def tf2pytorch(checkpoint_path, num_instrumments):
+def tf2pytorch(checkpoint_path: Path, num_instruments: int):
     tf_vars = {}
     init_vars = tf.train.list_variables(checkpoint_path)
     # print(init_vars)
@@ -19,7 +18,7 @@ def tf2pytorch(checkpoint_path, num_instrumments):
     tconv_idx = 0
     bn_idx = 0
     outputs = []
-    for i in range(num_instrumments):
+    for i in range(num_instruments):
         output = {}
         outputs.append(output)
 
