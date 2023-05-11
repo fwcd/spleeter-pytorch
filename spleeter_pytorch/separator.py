@@ -67,10 +67,7 @@ class Separator(nn.Module):
             net.eval()  # change mode to eval
             self.instruments.append(net)
 
-    def forward(self, wav):
-        return self.separate(wav)
-
-    def separate(self, L: int, stft_mag):
+    def forward(self, L: int, stft_mag):
         """
         Separates stereo wav into different tracks corresponding to different instruments
 
