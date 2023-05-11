@@ -7,7 +7,7 @@ A small implementation of the [Spleeter](https://github.com/deezer/spleeter) ste
 Install the package using `pip3 install .`, then run
 
 ```sh
-spleeter-pytorch audio_example.mp3
+spleeter-pytorch audio-example.mp3
 ```
 
 to separate the example file. The output will be located in `output/stems`.
