@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# A script for converting Spleeter (or at least part of it) to Core ML.
+
+# Useful resources:
+# - https://github.com/deezer/spleeter/issues/210
+# - https://github.com/deezer/spleeter/issues/155
+# - https://twitter.com/ExtractorVocal/status/1342643493227773952
+
 import coremltools as ct
 import numpy as np
 import librosa
