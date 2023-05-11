@@ -29,8 +29,12 @@ def main():
     # wav_torch = wav / (wav.max() + 1e-8)
 
     wavs = es.separate(wav)
+
+    output: Path = args.output
+    output.mkdir(parents=True, exist_ok=True)
+
     for i in range(len(wavs)):
-        fname = args.output / f'out_{i}.wav'
+        fname = output / f'out_{i}.wav'
         print(f'Writing {fname}')
         soundfile.write(fname, wavs[i].cpu().detach().numpy().T, samplerate, "PCM_16")
         # write_wav(fname, np.asfortranarray(wavs[i].squeeze().numpy()), sr)
