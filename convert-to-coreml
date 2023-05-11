@@ -19,12 +19,14 @@ ROOT = Path(__file__).resolve().parent
 
 def main():
     parser = argparse.ArgumentParser(description='Converts Spleeter (minus the STFT preprocessing) to Core ML')
+    parser.add_argument('-n', '--num-instruments', type=int, default=2, help='The number of stems.')
+    parser.add_argument('-m', '--model', type=Path, default=ROOT / 'checkpoints' / '2stems' / 'model', help='The path to the model to use.')
     parser.add_argument('-o', '--output', type=Path, default=ROOT / 'output' / 'coreml', help='The output directory to place the model in')
 
     args = parser.parse_args()
 
     samplerate = 44100
-    estimator = Estimator(2, ROOT / 'checkpoints' / '2stems' / 'model')
+    estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
     estimator.eval()
 
     # Load wav audio
