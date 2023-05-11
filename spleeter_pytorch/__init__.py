@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def main():
     parser = argparse.ArgumentParser(description='Separate stems from an audio file.')
     parser.add_argument('-m', '--model', type=Path, default=ROOT / 'checkpoints' / '2stems' / 'model', help='The path to the model to use.')
-    parser.add_argument('-o', '--output', type=Path, default=ROOT / 'output', help='The path to the output directory.')
+    parser.add_argument('-o', '--output', type=Path, default=ROOT / 'output' / 'stems', help='The path to the output directory.')
     parser.add_argument('input', type=Path, help='The path to the input file to process')
 
     args = parser.parse_args()
