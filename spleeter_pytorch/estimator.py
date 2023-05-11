@@ -4,9 +4,7 @@ import torch.nn.functional as F
 from pathlib import Path
 from torch import nn
 
-from .separator import Separator
-from .unet import UNet
-from .util import tf2pytorch
+from spleeter_pytorch.separator import Separator
 
 class Estimator(nn.Module):
     def __init__(self, num_instruments: int, checkpoint_path: Path):

@@ -5,7 +5,7 @@ import librosa
 import soundfile
 import torch
 
-from spleeter.estimator import Estimator
+from spleeter_pytorch.estimator import Estimator
 
 if __name__ == '__main__':
     sr = 44100

@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from pathlib import Path
 from torch import nn
 
-from .unet import UNet
-from .util import tf2pytorch
+from spleeter_pytorch.unet import UNet
+from spleeter_pytorch.util import tf2pytorch
 
 def load_ckpt(model, ckpt):
     state_dict = model.state_dict()
