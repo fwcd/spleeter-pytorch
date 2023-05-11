@@ -91,6 +91,7 @@ class Estimator(nn.Module):
 
         pad = self.win_length // 2 + 1 - stft.size(1)
         stft = F.pad(stft, (0, 0, 0, 0, 0, pad))
+        stft = torch.complex(stft[:, :, :, 0], stft[:, :, :, 1])
         wav = torch.istft(stft, self.win_length, hop_length=self.hop_length, center=True,
                     window=self.win)
         return wav.detach()
