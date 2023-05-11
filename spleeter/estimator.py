@@ -1,49 +1,16 @@
-import math
-
 import torch
 import torch.nn.functional as F
 
 from pathlib import Path
 from torch import nn
 
+from .separator import Separator
 from .unet import UNet
 from .util import tf2pytorch
 
-def load_ckpt(model, ckpt):
-    state_dict = model.state_dict()
-    for k, v in ckpt.items():
-        if k in state_dict:
-            target_shape = state_dict[k].shape
-            assert target_shape == v.shape
-            state_dict.update({k: torch.from_numpy(v)})
-        else:
-            print('Ignore ', k)
-
-    model.load_state_dict(state_dict)
-    return model
-
-
-def pad_and_partition(tensor, T):
-    """
-    pads zero and partition tensor into segments of length T
-
-    Args:
-        tensor(Tensor): BxCxFxL
-
-    Returns:
-        tensor of size (B*[L/T] x C x F x T)
-    """
-    old_size = tensor.size(3)
-    new_size = math.ceil(old_size/T) * T
-    tensor = F.pad(tensor, [0, new_size - old_size])
-    [b, c, t, f] = tensor.shape
-    split = new_size // T
-    return torch.cat(torch.split(tensor, T, dim=3), dim=0)
-
-
 class Estimator(nn.Module):
     def __init__(self, num_instruments: int, checkpoint_path: Path):
-        super(Estimator, self).__init__()
+        super().__init__()
 
         # stft config
         self.F = 1024
@@ -55,17 +22,7 @@ class Estimator(nn.Module):
             requires_grad=False
         )
 
-        ckpts = tf2pytorch(checkpoint_path, num_instruments)
-
-        # filter
-        self.instruments = nn.ModuleList()
-        for i in range(num_instruments):
-            print('Loading model for instrument {}'.format(i))
-            net = UNet(2)
-            ckpt = ckpts[i]
-            net = load_ckpt(net, ckpt)
-            net.eval()  # change mode to eval
-            self.instruments.append(net)
+        self.separator = Separator(num_instruments=num_instruments, checkpoint_path=checkpoint_path)
 
     def compute_stft(self, wav):
         """
@@ -109,37 +66,18 @@ class Estimator(nn.Module):
 
         # stft - 2 X F x L x 2
         # stft_mag - 2 X F x L
+        # Compute the STFT from the mixed wav
         stft, stft_mag = self.compute_stft(wav)
 
         L = stft.size(2)
 
-        # 1 x 2 x F x T
-        stft_mag = stft_mag.unsqueeze(-1).permute([3, 0, 1, 2])
-        stft_mag = pad_and_partition(stft_mag, self.T)  # B x 2 x F x T
-        stft_mag = stft_mag.transpose(2, 3)  # B x 2 x T x F
+        # Perform the actual stem separation
+        masks = self.separator(L, stft_mag)
 
-        B = stft_mag.shape[0]
-
-        # compute instruments' mask
-        masks = []
-        for net in self.instruments:
-            mask = net(stft_mag)
-            masks.append(mask)
-
-        # compute denominator
-        mask_sum = sum([m ** 2 for m in masks])
-        mask_sum += 1e-10
-
+        # Recover the wavs via an inverse STFT
         wavs = []
         for mask in masks:
-            mask = (mask ** 2 + 1e-10/2)/(mask_sum)
-            mask = mask.transpose(2, 3)  # B x 2 X F x T
-
-            mask = torch.cat(
-                torch.split(mask, 1, dim=0), dim=3)
-
-            mask = mask.squeeze(0)[:,:,:L].unsqueeze(-1) # 2 x F x L x 1
-            stft_masked = stft *  mask
+            stft_masked = stft * mask
             wav_masked = self.inverse_stft(stft_masked)
 
             wavs.append(wav_masked)
