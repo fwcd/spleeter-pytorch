@@ -1,6 +1,6 @@
 # spleeter-pytorch
 
-Spleeter implementation in PyTorch.
+A small implementation of the [Spleeter](https://github.com/deezer/spleeter) stem separation model in PyTorch. Using this model, audio files can be demixed into vocals, instrumentation etc.
 
 ## Example
 
@@ -14,7 +14,7 @@ to separate the example file. The output will be located in `output/stems`.
 
 ## Conversion to Core ML
 
-To convert the model to Core ML, run
+The non-FFT parts of the Spleeter model can be converted to Core ML, for efficient inference on macOS/iOS devices. To perform the conversion, run
 
 ```sh
 ./convert-to-coreml
