@@ -1,0 +1,6 @@
+coremltools
+numpy
+librosa
+soundfile
+torch
+tensorflow
