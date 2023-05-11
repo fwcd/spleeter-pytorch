@@ -9,7 +9,6 @@
 
 import argparse
 import coremltools as ct
-import librosa
 import torch
 
 from pathlib import Path
@@ -49,12 +48,12 @@ def main():
         inputs=[ct.TensorType(shape=stft_mag.shape)]
     )
 
-    output: Path = args.output
-    output.mkdir(parents=True, exist_ok=True)
-    output_path = output / f'Spleeter-{args.num_instruments}stems.mlpackage'
+    output_dir: Path = args.output
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output = output_dir / f'Spleeter-{args.num_instruments}stems.mlpackage'
 
-    print(f'==> Writing to {output_path}')
-    mlmodel.save(output_path)
+    print(f'==> Writing {output}')
+    mlmodel.save(output)
 
 if __name__ == '__main__':
     main()

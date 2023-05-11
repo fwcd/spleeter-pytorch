@@ -1,11 +1,12 @@
 import argparse
 import numpy as np
-import librosa
 import soundfile
 import torch
+import torchaudio
 
 from pathlib import Path
 
+from spleeter_pytorch.audio import read_audio, write_wav
 from spleeter_pytorch.estimator import Estimator
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,24 +19,21 @@ def main():
     parser.add_argument('input', type=Path, help='The path to the input file to process')
 
     args = parser.parse_args()
-    samplerate = 44100
     estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
     estimator.eval()
 
     # Load wav audio
-    wav, _ = librosa.load(args.input, mono=False, res_type='kaiser_fast',sr=samplerate)
-    wav = torch.Tensor(wav)
+    wav, samplerate = read_audio(args.input)
 
     # Normalize audio
     # wav_torch = wav / (wav.max() + 1e-8)
 
     wavs = estimator.separate(wav)
 
-    output: Path = args.output
-    output.mkdir(parents=True, exist_ok=True)
+    output_dir: Path = args.output
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     for i in range(len(wavs)):
-        fname = output / f'out_{i}.wav'
-        print(f'Writing {fname}')
-        soundfile.write(fname, wavs[i].cpu().detach().numpy().T, samplerate, "PCM_16")
-        # write_wav(fname, np.asfortranarray(wavs[i].squeeze().numpy()), sr)
+        output = output_dir / f'out_{i}.wav'
+        print(f'==> Writing {output}')
+        write_wav(output, wav=wavs[i], samplerate=samplerate)
