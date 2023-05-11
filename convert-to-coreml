@@ -22,6 +22,7 @@ def main():
     parser.add_argument('-n', '--num-instruments', type=int, default=2, help='The number of stems.')
     parser.add_argument('-m', '--model', type=Path, default=ROOT / 'checkpoints' / '2stems' / 'model', help='The path to the model to use.')
     parser.add_argument('-o', '--output', type=Path, default=ROOT / 'output' / 'coreml', help='The output directory to place the model in')
+    parser.add_argument('-l', '--length', type=float, default=5.0, help='The input length in seconds for the converted Core ML model (which will only take fixed-length inputs). Default: 5 seconds')
 
     args = parser.parse_args()
 
@@ -29,19 +30,24 @@ def main():
     estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
     estimator.eval()
 
-    # Load wav audio
-    wav, _ = librosa.load(ROOT / 'audio_example.mp3', mono=False, res_type='kaiser_fast', sr=samplerate)
-    wav = torch.Tensor(wav)
+    # Create sample 'audio' for tracing
+    wav = torch.zeros(2, int(args.length * samplerate))
 
     # Reproduce the STFT step (which we cannot convert to Core ML, unfortunately)
     _, stft_mag = estimator.compute_stft(wav)
 
-    print('==> Tracing')
+    print('==> Tracing model')
     traced_model = torch.jit.trace(estimator.separator, stft_mag)
     out = traced_model(stft_mag)
 
-    print('==> Converting') # TODO: Dynamic input size?
-    mlmodel = ct.convert(traced_model, convert_to='mlprogram', inputs=[ct.TensorType(shape=stft_mag.shape)])
+    print('==> Converting to Core ML')
+    mlmodel = ct.convert(
+        traced_model,
+        convert_to='mlprogram',
+        # TODO: Investigate whether we'd want to make the input shape flexible
+        # See https://coremltools.readme.io/docs/flexible-inputs
+        inputs=[ct.TensorType(shape=stft_mag.shape)]
+    )
 
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=True)
