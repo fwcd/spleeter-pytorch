@@ -5,7 +5,7 @@ from torch import nn
 
 class CustomPad(nn.Module):
     def __init__(self, padding_setting=(1, 2, 1, 2)):
-        super(CustomPad, self).__init__()
+        super().__init__()
         self.padding_setting = padding_setting
 
     def forward(self, x):
@@ -14,7 +14,7 @@ class CustomPad(nn.Module):
 
 class CustomTransposedPad(nn.Module):
     def __init__(self, padding_setting=(1, 2, 1, 2)):
-        super(CustomTransposedPad, self).__init__()
+        super().__init__()
         self.padding_setting = padding_setting
 
     def forward(self, x):
@@ -45,7 +45,7 @@ def up_block(in_filters, out_filters, dropout=False):
 
 class UNet(nn.Module):
     def __init__(self, in_channels=2):
-        super(UNet, self).__init__()
+        super().__init__()
         self.down1_conv, self.down1_act = down_block(in_channels, 16)
         self.down2_conv, self.down2_act = down_block(16, 32)
         self.down3_conv, self.down3_act = down_block(32, 64)
