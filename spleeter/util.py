@@ -24,29 +24,23 @@ def tf2pytorch(checkpoint_path: Path, num_instruments: int):
 
         for j in range(1,7):
             if conv_idx == 0:
-                conv_suffix = ""
+                conv_suffix = ''
             else:
-                conv_suffix = "_" + str(conv_idx)
+                conv_suffix = f'_{conv_idx}'
 
             if bn_idx == 0:
-                bn_suffix = ""
+                bn_suffix = ''
             else:
-                bn_suffix = "_" + str(bn_idx)
+                bn_suffix = f'_{bn_idx}'
 
-            output['down{}_conv.1.weight'.format(j)] = np.transpose(
-                tf_vars["conv2d{}/kernel".format(conv_suffix)], (3, 2, 0, 1))
-            # print('conv dtype: ',output['down{}.0.weight'.format(j)].dtype)
-            output['down{}_conv.1.bias'.format(
-                j)] = tf_vars["conv2d{}/bias".format(conv_suffix)]
+            output[f'down{j}_conv.1.weight'] = np.transpose(tf_vars[f'conv2d{conv_suffix}/kernel'], (3, 2, 0, 1))
+            # print('conv dtype: ',output[f'down{j}.0.weight'].dtype)
+            output[f'down{j}_conv.1.bias'] = tf_vars[f'conv2d{conv_suffix}/bias']
 
-            output['down{}_act.0.weight'.format(
-                j)] = tf_vars["batch_normalization{}/gamma".format(bn_suffix)]
-            output['down{}_act.0.bias'.format(
-                j)] = tf_vars["batch_normalization{}/beta".format(bn_suffix)]
-            output['down{}_act.0.running_mean'.format(
-                j)] = tf_vars['batch_normalization{}/moving_mean'.format(bn_suffix)]
-            output['down{}_act.0.running_var'.format(
-                j)] = tf_vars['batch_normalization{}/moving_variance'.format(bn_suffix)]
+            output[f'down{j}_act.0.weight'] = tf_vars[f'batch_normalization{bn_suffix}/gamma']
+            output[f'down{j}_act.0.bias'] = tf_vars[f'batch_normalization{bn_suffix}/beta']
+            output[f'down{j}_act.0.running_mean'] = tf_vars[f'batch_normalization{bn_suffix}/moving_mean']
+            output[f'down{j}_act.0.running_var'] = tf_vars[f'batch_normalization{bn_suffix}/moving_variance']
 
             conv_idx += 1
             bn_idx += 1
@@ -54,34 +48,28 @@ def tf2pytorch(checkpoint_path: Path, num_instruments: int):
         # up blocks
         for j in range(1, 7):
             if tconv_idx == 0:
-                tconv_suffix = ""
+                tconv_suffix = ''
             else:
-                tconv_suffix = "_" + str(tconv_idx)
+                tconv_suffix = f'_{tconv_idx}'
 
             if bn_idx == 0:
-                bn_suffix = ""
+                bn_suffix = ''
             else:
-                bn_suffix= "_" + str(bn_idx)
+                bn_suffix= f'_{bn_idx}'
 
-            output['up{}.0.weight'.format(j)] = np.transpose(
-                tf_vars["conv2d_transpose{}/kernel".format(tconv_suffix)], (3,2,0, 1))
-            output['up{}.0.bias'.format(
-                j)] = tf_vars["conv2d_transpose{}/bias".format(tconv_suffix)]
-            output['up{}.3.weight'.format(
-                j)] = tf_vars["batch_normalization{}/gamma".format(bn_suffix)]
-            output['up{}.3.bias'.format(
-                j)] = tf_vars["batch_normalization{}/beta".format(bn_suffix)]
-            output['up{}.3.running_mean'.format(
-                j)] = tf_vars['batch_normalization{}/moving_mean'.format(bn_suffix)]
-            output['up{}.3.running_var'.format(
-                j)] = tf_vars['batch_normalization{}/moving_variance'.format(bn_suffix)]
+            output[f'up{j}.0.weight'] = np.transpose(tf_vars[f'conv2d_transpose{tconv_suffix}/kernel'], (3,2,0, 1))
+            output[f'up{j}.0.bias'] = tf_vars[f'conv2d_transpose{tconv_suffix}/bias']
+            output[f'up{j}.3.weight'] = tf_vars[f'batch_normalization{bn_suffix}/gamma']
+            output[f'up{j}.3.bias'] = tf_vars[f'batch_normalization{bn_suffix}/beta']
+            output[f'up{j}.3.running_mean'] = tf_vars[f'batch_normalization{bn_suffix}/moving_mean']
+            output[f'up{j}.3.running_var'] = tf_vars[f'batch_normalization{bn_suffix}/moving_variance']
             tconv_idx += 1
             bn_idx += 1
 
         if conv_idx == 0:
-            suffix = ""
+            suffix = ''
         else:
-            suffix = "_" + str(conv_idx)
+            suffix = '_' + str(conv_idx)
         output['up7.0.weight'] = np.transpose(
             tf_vars['conv2d{}/kernel'.format(suffix)], (3, 2, 0, 1))
         output['up7.0.bias'] = tf_vars['conv2d{}/bias'.format(suffix)]
