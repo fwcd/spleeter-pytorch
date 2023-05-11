@@ -19,17 +19,18 @@ def main():
     estimator.eval()
 
     # Load wav audio
-    wav, samplerate = read_audio(args.input)
+    input: Path = args.input
+    wav, samplerate = read_audio(input)
 
     # Normalize audio
     # wav_torch = wav / (wav.max() + 1e-8)
 
     wavs = estimator.separate(wav)
 
-    output_dir: Path = args.output
+    output_dir: Path = args.output / input.with_suffix('').name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     for i in range(len(wavs)):
-        output = output_dir / f'out_{i}.wav'
+        output = output_dir / f'stem-{i:02d}.wav'
         print(f'==> Writing {output}')
         write_wav(output, wav=wavs[i], samplerate=samplerate)
