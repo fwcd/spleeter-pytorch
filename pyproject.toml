@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "spleeter-pytorch"
 version = "0.0.1"
 description = "Spleeter implementation in PyTorch"
+# Otherwise coremltools won't install a wheel containing required native libraries
+# and fail during model conversions e.g. noting that BlobWriter is not available.
+requires-python = "<3.11"
 dependencies = [
   "coremltools >= 6.3, < 7",
   "numpy >= 1.24, < 2",
