@@ -67,10 +67,8 @@ class Estimator(nn.Module):
         # Compute the STFT from the mixed wav
         stft, stft_mag = self.compute_stft(wav)
 
-        L = stft.size(2)
-
         # Perform the actual stem separation
-        masks = self.separator(L, stft_mag)
+        masks = self.separator(stft_mag)
 
         # Recover the wavs via an inverse STFT
         wavs = []

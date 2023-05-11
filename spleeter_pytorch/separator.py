@@ -67,21 +67,20 @@ class Separator(nn.Module):
             net.eval()  # change mode to eval
             self.instruments.append(net)
 
-    def forward(self, L: int, stft_mag):
+    def forward(self, stft_mag):
         """
         Separates stereo wav into different tracks corresponding to different instruments
 
         Args:
-            L (int)
             stft_mag (tensor): 2 x F x L
         """
+
+        L = stft_mag.shape[2]
 
         # 1 x 2 x F x T
         stft_mag = stft_mag.unsqueeze(-1).permute([3, 0, 1, 2])
         stft_mag = pad_and_partition(stft_mag, self.T)  # B x 2 x F x T
         stft_mag = stft_mag.transpose(2, 3)  # B x 2 x T x F
-
-        B = stft_mag.shape[0]
 
         # compute instruments' mask
         masks = []
