@@ -26,13 +26,13 @@ The `.mlpackage` will be located under `output/coreml`.
 
 ## Note
 
-* I only tested with 2stems model, not sure if it works for other models.
-* There might be some bugs, the quality of output isn't as good as the original. See [output](./output) for some results. If someone found the reason, please open a pull request. Thanks.
+* Currently this is only tested with the 2stems model. Feel free to [get one of the other models](https://github.com/deezer/spleeter/releases/tag/v1.4.0) and test it on them.
+* There might be some bugs, the quality of output isn't as good as the original. If someone found the reason, please open a pull request. Thanks.
 
 ## Reference
 
-* [Original Spleeter](https://github.com/deezer/spleeter)
-* [Original `spleeter-pytorch`](https://github.com/tuan3w/spleeter-pytorch)
+* [Original Spleeter](https://github.com/deezer/spleeter) by [`deezer`](https://github.com/deezer)
+* [Original `spleeter-pytorch`](https://github.com/tuan3w/spleeter-pytorch) by [`tuan3w`](https://github.com/tuan3w)
 
 ## License
 
