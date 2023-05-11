@@ -43,10 +43,12 @@ def main():
     print('==> Converting') # TODO: Dynamic input size?
     mlmodel = ct.convert(traced_model, convert_to='mlprogram', inputs=[ct.TensorType(shape=stft_mag.shape)])
 
-    print('==> Writing')
     output: Path = args.output
     output.mkdir(parents=True, exist_ok=True)
-    mlmodel.save(output / 'Spleeter.mlpackage')
+    output_path = output / f'Spleeter-{args.num_instruments}stems.mlpackage'
+
+    print(f'==> Writing to {output_path}')
+    mlmodel.save(output_path)
 
 if __name__ == '__main__':
     main()
