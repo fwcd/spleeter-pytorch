@@ -12,10 +12,15 @@ def main():
     parser.add_argument('-n', '--num-instruments', type=int, default=2, help='The number of stems.')
     parser.add_argument('-m', '--model', type=Path, default=ROOT / 'checkpoints' / '2stems' / 'model', help='The path to the model to use.')
     parser.add_argument('-o', '--output', type=Path, default=ROOT / 'output' / 'stems', help='The path to the output directory.')
+    parser.add_argument('--torch-stft', default=True, action=argparse.BooleanOptionalAction, help="Whether to use PyTorch's native STFT.")
     parser.add_argument('input', type=Path, help='The path to the input file to process')
 
     args = parser.parse_args()
-    estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
+    estimator = Estimator(
+        num_instruments=args.num_instruments,
+        checkpoint_path=args.model,
+        use_torch_stft=args.torch_stft,
+    )
     estimator.eval()
 
     # Load wav audio
