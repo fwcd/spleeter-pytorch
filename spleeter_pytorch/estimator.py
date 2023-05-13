@@ -5,6 +5,7 @@ from pathlib import Path
 from torch import nn
 
 from spleeter_pytorch.separator import Separator
+from spleeter_pytorch.stft import STFT
 from spleeter_pytorch.util import overlap_and_add
 
 class Estimator(nn.Module):
@@ -21,13 +22,22 @@ class Estimator(nn.Module):
         self.T = 512
         self.win_length = 4096 # should be a power of two, see https://github.com/tensorflow/tensorflow/blob/6935c8f706dde1906e388b3142906c92cdcc36db/tensorflow/python/ops/signal/spectral_ops.py#L48-L49
         self.hop_length = 1024
+        win_func = torch.hann_window
         self.win = nn.Parameter(
-            torch.hann_window(self.win_length),
+            win_func(self.win_length),
             requires_grad=False
         )
 
         self.separator = Separator(num_instruments=num_instruments, checkpoint_path=checkpoint_path)
         self.use_torch_stft = use_torch_stft
+
+        if not use_torch_stft:
+            self.stft = STFT(
+                filter_length=self.win_length,
+                hop_length=self.hop_length,
+                win_length=self.win_length,
+                win_func=win_func,
+            )
 
     def compute_stft(self, wav: torch.Tensor):
         """
@@ -48,11 +58,7 @@ class Estimator(nn.Module):
                 pad_mode='constant'
             )
         else:
-            L = wav.shape[-1]
-            framed_wav = wav.unfold(-1, size=self.win_length, step=self.hop_length)
-            framed_wav *= self.win
-            stft = torch.fft.rfft(framed_wav, self.win_length)
-            stft = stft.transpose(1, 2)
+            stft = self.stft.transform(wav)
 
         # only keep freqs smaller than self.F
         stft = stft[:, :self.F, :]
@@ -75,10 +81,7 @@ class Estimator(nn.Module):
                 window=self.win
             )
         else:
-            stft = stft.transpose(1, 2)
-            wav: torch.Tensor = torch.fft.irfft(stft, self.win_length)
-            wav *= self.win
-            wav = overlap_and_add(wav, self.hop_length)
+            wav = self.stft.inverse(stft)
         return wav.detach()
 
     def forward(self, wav):
