@@ -26,18 +26,19 @@ def main():
     args = parser.parse_args()
 
     samplerate = 44100
-    estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
+    estimator = Estimator(
+        num_instruments=args.num_instruments,
+        checkpoint_path=args.model,
+        use_torch_stft=False,
+    )
     estimator.eval()
 
     # Create sample 'audio' for tracing
     wav = torch.zeros(2, int(args.length * samplerate))
 
-    # Reproduce the STFT step (which we cannot convert to Core ML, unfortunately)
-    _, stft_mag = estimator.compute_stft(wav)
-
     print('==> Tracing model')
-    traced_model = torch.jit.trace(estimator.separator, stft_mag)
-    out = traced_model(stft_mag)
+    traced_model = torch.jit.trace(estimator, wav)
+    out = traced_model(wav)
 
     print('==> Converting to Core ML')
     mlmodel = ct.convert(
@@ -45,7 +46,7 @@ def main():
         convert_to='mlprogram',
         # TODO: Investigate whether we'd want to make the input shape flexible
         # See https://coremltools.readme.io/docs/flexible-inputs
-        inputs=[ct.TensorType(shape=stft_mag.shape)]
+        inputs=[ct.TensorType(shape=wav.shape)]
     )
 
     output_dir: Path = args.output
