@@ -32,12 +32,15 @@ class Estimator(nn.Module):
 
         stft = torch.stft(wav, n_fft=self.win_length, hop_length=self.hop_length, window=self.win,
                           center=True, return_complex=True, pad_mode='constant')
-        stft = torch.view_as_real(stft)
+        
+        # implement torch.view_as_real(stft) manually since coremltools doesn't support it
+        stft = torch.stack((torch.real(stft), torch.imag(stft)), axis=-1)
 
         # only keep freqs smaller than self.F
         stft = stft[:, :self.F]
 
-        mag = torch.hypot(stft[:, :, :, 0], stft[:, :, :, 1])
+        # implement torch.hypot manually since coremltools doesn't support it
+        mag = torch.sqrt(stft[:, :, :, 0] ** 2 + stft[:, :, :, 1] ** 2)
 
         return stft, mag
 
