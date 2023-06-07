@@ -26,7 +26,11 @@ def main():
     args = parser.parse_args()
 
     samplerate = 44100
-    estimator = Estimator(num_instruments=args.num_instruments, checkpoint_path=args.model)
+    estimator = Estimator(
+        num_instruments=args.num_instruments,
+        checkpoint_path=args.model,
+        use_torch_istft=False,
+    )
     estimator.eval()
 
     # Create sample 'audio' for tracing

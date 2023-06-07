@@ -5,15 +5,21 @@ from pathlib import Path
 from torch import nn
 
 from spleeter_pytorch.separator import Separator
+from spleeter_pytorch.util import overlap_and_add
 
 class Estimator(nn.Module):
-    def __init__(self, num_instruments: int, checkpoint_path: Path):
+    def __init__(
+        self,
+        num_instruments: int,
+        checkpoint_path: Path,
+        use_torch_istft: bool=True,
+    ):
         super().__init__()
 
         # stft config
         self.F = 1024
         self.T = 512
-        self.win_length = 4096
+        self.win_length = 4096 # should be a power of two, see https://github.com/tensorflow/tensorflow/blob/6935c8f706dde1906e388b3142906c92cdcc36db/tensorflow/python/ops/signal/spectral_ops.py#L48-L49
         self.hop_length = 1024
         self.win = nn.Parameter(
             torch.hann_window(self.win_length),
@@ -21,8 +27,9 @@ class Estimator(nn.Module):
         )
 
         self.separator = Separator(num_instruments=num_instruments, checkpoint_path=checkpoint_path)
+        self.use_torch_istft = use_torch_istft
 
-    def compute_stft(self, wav):
+    def compute_stft(self, wav: torch.Tensor):
         """
         Computes stft feature from wav
 
@@ -31,7 +38,7 @@ class Estimator(nn.Module):
         """
 
         stft = torch.stft(wav, n_fft=self.win_length, hop_length=self.hop_length, window=self.win,
-                          center=True, return_complex=True, pad_mode='constant')
+                        center=True, return_complex=True, pad_mode='constant')
         
         # implement torch.view_as_real(stft) manually since coremltools doesn't support it
         stft = torch.stack((torch.real(stft), torch.imag(stft)), axis=-1)
@@ -53,8 +60,20 @@ class Estimator(nn.Module):
         # implement torch.view_as_complex(stft) manually since coremltools doesn't support it
         stft = torch.complex(stft[..., 0], stft[..., 1])
 
-        wav = torch.istft(stft, self.win_length, hop_length=self.hop_length, center=True,
-                    window=self.win)
+        if self.use_torch_istft:
+            wav = torch.istft(
+                stft,
+                self.win_length,
+                hop_length=self.hop_length,
+                center=True,
+                window=self.win
+            )
+        else:
+            stft = stft.transpose(1, 2)
+            wav: torch.Tensor = torch.fft.irfft(stft, self.win_length)
+            wav *= self.win
+            wav = overlap_and_add(wav, self.hop_length)
+
         return wav.detach()
 
     def forward(self, wav):
