@@ -40,7 +40,7 @@ class Estimator(nn.Module):
         stft = stft[:, :self.F]
 
         # implement torch.hypot manually since coremltools doesn't support it
-        mag = torch.sqrt(stft[:, :, :, 0] ** 2 + stft[:, :, :, 1] ** 2)
+        mag = torch.sqrt(stft[..., 0] ** 2 + stft[..., 1] ** 2)
 
         return stft, mag
 
@@ -49,7 +49,10 @@ class Estimator(nn.Module):
 
         pad = self.win_length // 2 + 1 - stft.size(1)
         stft = F.pad(stft, (0, 0, 0, 0, 0, pad))
-        stft = torch.view_as_complex(stft)
+
+        # implement torch.view_as_complex(stft) manually since coremltools doesn't support it
+        stft = stft[..., 0] + stft[..., 1] * 1j
+
         wav = torch.istft(stft, self.win_length, hop_length=self.hop_length, center=True,
                     window=self.win)
         return wav.detach()
