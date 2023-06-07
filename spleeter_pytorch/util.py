@@ -2,6 +2,7 @@ import math
 import numpy as np
 import tensorflow as tf
 import torch
+import torch.nn.functional as F
 
 from pathlib import Path
 
@@ -79,6 +80,29 @@ def tf2pytorch(checkpoint_path: Path, num_instruments: int):
 
     return outputs
 
+def unfold(x: torch.Tensor, size: int, step: int) -> torch.Tensor:
+    '''
+    Extract sliding windows from a 1D tensor purely in terms
+    of `torch.nn.functional.unfold`. This serves as a polyfill
+    for `torch.unfold` which coremltools does not support yet.
+
+    `unfold(x, size, step) == x.unfold(0, size, step)`
+    '''
+
+    assert len(x.shape) == 1
+
+    # Reshape to 4D
+    x = x[None, None, None]
+
+    # Apply unfold
+    y = F.unfold(x, kernel_size=(1, size), stride=step)
+    y = y.transpose(-1, -2)
+
+    # Remove unneeded dimensions again
+    y = y[0]
+
+    return y
+
 # Source: https://github.com/kaituoxu/Conv-TasNet/blob/master/src/utils.py
 # MIT-licensed, Copyright (c) 2018 Kaituo XU
 
@@ -111,8 +135,9 @@ def overlap_and_add(signal: torch.Tensor, frame_step: int):
 
     subframe_signal = signal.view(*outer_dimensions, -1, subframe_length)
 
-    frame = torch.arange(0, output_subframes).unfold(0, subframes_per_frame, subframe_step)
-    frame = signal.new_tensor(frame).long()  # signal may in GPU or CPU
+    frame = torch.arange(0, output_subframes).float() # floats are needed to unfold with torch.nn.functional
+    frame = unfold(frame, subframes_per_frame, subframe_step)
+    frame = frame.clone().long()  # signal may in GPU or CPU
     frame = frame.contiguous().view(-1)
 
     result = signal.new_zeros(*outer_dimensions, output_subframes, subframe_length)
