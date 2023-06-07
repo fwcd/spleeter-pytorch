@@ -57,6 +57,11 @@ class Estimator(nn.Module):
         pad = self.win_length // 2 + 1 - stft.size(1)
         stft = F.pad(stft, (0, 0, 0, 0, 0, pad))
 
+        # irfft expects a different dimension order
+        # (we'll have to transpose first since coremltools doesn't like transposing complex tensors).
+        if not self.use_torch_istft:
+            stft = stft.transpose(1, 2)
+
         # implement torch.view_as_complex(stft) manually since coremltools doesn't support it
         stft = torch.complex(stft[..., 0], stft[..., 1])
 
@@ -69,7 +74,6 @@ class Estimator(nn.Module):
                 window=self.win
             )
         else:
-            stft = stft.transpose(1, 2)
             wav: torch.Tensor = torch.fft.irfft(stft, self.win_length)
             wav *= self.win
             wav = overlap_and_add(wav, self.hop_length)
