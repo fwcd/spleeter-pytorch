@@ -51,7 +51,7 @@ class Estimator(nn.Module):
         stft = F.pad(stft, (0, 0, 0, 0, 0, pad))
 
         # implement torch.view_as_complex(stft) manually since coremltools doesn't support it
-        stft = stft[..., 0] + stft[..., 1] * 1j
+        stft = torch.complex(stft[..., 0], stft[..., 1])
 
         wav = torch.istft(stft, self.win_length, hop_length=self.hop_length, center=True,
                     window=self.win)
