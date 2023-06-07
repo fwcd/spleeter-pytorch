@@ -32,12 +32,14 @@ class Estimator(nn.Module):
 
         stft = torch.stft(wav, n_fft=self.win_length, hop_length=self.hop_length, window=self.win,
                           center=True, return_complex=True, pad_mode='constant')
+        stft = torch.view_as_real(stft)
 
         # only keep freqs smaller than self.F
-        stft = stft[:, :self.F, :]
-        mag = stft.abs()
+        stft = stft[:, :self.F]
 
-        return torch.view_as_real(stft), mag
+        mag = torch.hypot(stft[:, :, :, 0], stft[:, :, :, 1])
+
+        return stft, mag
 
     def inverse_stft(self, stft):
         """Inverses stft to wave form"""
