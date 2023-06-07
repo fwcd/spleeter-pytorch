@@ -32,19 +32,27 @@ class Estimator(nn.Module):
 
         stft = torch.stft(wav, n_fft=self.win_length, hop_length=self.hop_length, window=self.win,
                           center=True, return_complex=True, pad_mode='constant')
+        
+        # implement torch.view_as_real(stft) manually since coremltools doesn't support it
+        stft = torch.stack((torch.real(stft), torch.imag(stft)), axis=-1)
 
         # only keep freqs smaller than self.F
-        stft = stft[:, :self.F, :]
-        mag = stft.abs()
+        stft = stft[:, :self.F]
 
-        return torch.view_as_real(stft), mag
+        # implement torch.hypot manually since coremltools doesn't support it
+        mag = torch.sqrt(stft[..., 0] ** 2 + stft[..., 1] ** 2)
+
+        return stft, mag
 
     def inverse_stft(self, stft):
         """Inverses stft to wave form"""
 
         pad = self.win_length // 2 + 1 - stft.size(1)
         stft = F.pad(stft, (0, 0, 0, 0, 0, pad))
-        stft = torch.view_as_complex(stft)
+
+        # implement torch.view_as_complex(stft) manually since coremltools doesn't support it
+        stft = torch.complex(stft[..., 0], stft[..., 1])
+
         wav = torch.istft(stft, self.win_length, hop_length=self.hop_length, center=True,
                     window=self.win)
         return wav.detach()
